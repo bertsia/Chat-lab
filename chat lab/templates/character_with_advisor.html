@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block Heading %}Basic Character with Advisor{% endblock %}
+{% block description %}This is a chatbot that has a hidden advisor. The advisor will advise the chatbot on how to respond to your prompts. {% endblock %}
+
+{% block chat_messages %}
+    <!-- Default chat messages go here -->
+{% endblock %}
+
+{% block form_fields %}
+    <label for="seed">Seed:</label><br>
+    <input type="number" id="seed" name="seed" value="42"><br>
+    <p id="seedHelp" class="form-text text-muted">Enter a seed to make the bot answer the same way every time. Or leave empty to for variation.</p>
+
+    <label for="style">Style:</label><br>
+    <input type="text" id="style" name="style" value="funny"><br>
+    <p id="styleHelp" class="form-text text-muted">Write the mood the advisor will ask the chatbot to be in.</p>
+
+    <label for="message">Message:</label><br>
+    <textarea id="message" name="message" rows="4" cols="50"></textarea><br>
+
+    <input type="submit" value="Submit">
+{% endblock %}
+
+{% block script %}
+    <script>
+    var lastIndex = 0;
+
+    // Write new message to the chat
+    function writeMessage(message, isUser) {
+        var chatMessages = $(".chat-messages");
+        var messageClass = isUser ? "user-message" : "bot-message";
+        var messageElement = $("<div class='message " + messageClass + "'>" + message + "</div>");
+        chatMessages.append(messageElement);
+
+        // Scroll to the bottom of the chat messages div
+        chatMessages.scrollTop(chatMessages.prop("scrollHeight"));
+    }
+
+    function write_message_stream(message) {
+        // GET THE LAST MESSAGE IN THE CHAT
+        var chatMessages = $(".chat-messages");
+        var last_message = chatMessages.children().last();
+        var last_message_text = last_message.text();
+
+        // ADD THE NEW MESSAGE TO THE LAST MESSAGE
+        last_message.text(last_message_text + message);
+
+        // Scroll to the bottom of the chat messages div
+        chatMessages.scrollTop(chatMessages.prop("scrollHeight"));
+    }
+
+    function delete_last_message() {
+        // GET THE LAST MESSAGE IN THE CHAT
+        var chatMessages = $(".chat-messages");
+        var last_message = chatMessages.children().last();
+        last_message.remove();
+    }
+
+    // Send message to the server
+    $(document).ready(function(){
+        $("#messageForm").on('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting normally
+
+            var formData = $(this).serialize(); // Get the data from the form
+
+            // Write the user message to the chat
+            var userMessage = $("#message").val();
+            writeMessage(userMessage, true);
+
+            // Clear the input field
+            $("#message").val("");
+
+            // Disable the input field while waiting for the response
+            $("#message").prop("disabled", true);
+
+            // THIS IS THE WAY TO GO, BUT IT HAS TO BE UPDATED SO THAT IT ADD TEXT TO THE CURRENT MESSAGE BEING WRITTEN
+            $.ajax({
+                type: "POST",
+                url: "/character_with_advisor",
+                data: formData,
+                xhrFields: {
+                    onloadstart: function(e) {
+                        // Create the message div when the request starts
+                        // var response = e.currentTarget.response;
+                        writeMessage("", false);
+                        console.log(e.currentTarget.response);
+                    },
+
+                    onprogress: function(e) {
+                        var response = e.currentTarget.response;
+
+                        // Get the new data
+                        var newData = response.substring(lastIndex);
+                        lastIndex = response.length;
+
+                        console.log(newData);
+                        
+                        // Write the bot message to the chat
+                        write_message_stream(newData);
+                    }
+                },
+                success: function(response) {
+                    // Enable the input field
+                    console.log("Success");
+                    // Delete the last message, otherwise there will be a duplicate. The last message was a streamed message. 
+                    // While this was the last complete text message, the streamed message may have been not complete.
+                    // The streamed message is there to show that the bot is typing.
+                    delete_last_message();
+                    writeMessage(response);
+                    $("#message").prop("disabled", false);
+                }
+            });
+            
+        });
+    });
+    </script>
+{% endblock %}

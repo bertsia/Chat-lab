@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .chat-messages {
+            height: 300px; /* Adjust as needed */
+            width: 600px; /* Adjust as needed */
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
+        .message {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            display: block;
+        }
+
+        .user-message {
+            background-color: #f1f1f1;
+        }
+
+        .bot-message {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .form-text {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        p {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>{% block Heading %}Default chat{% endblock %}</h1>
+    <p>{% block description %}This is a default chat page{% endblock %}</p>
+
+    <div class="chat-history">
+        <div class="chat-history-header">
+            chat-history
+        </div>
+        <div class="chat-messages">
+            {% block chat_messages %}
+            <!-- Default chat messages go here -->
+            {% endblock %}
+        </div>
+        <div class="chat-input">
+            <form id="messageForm">
+                {% block form_fields %}
+                <!-- Form fields go here -->
+                {% endblock %}
+            </form>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    {% block script %}
+    <!-- Your JavaScript code here -->
+    {% endblock %}
+</body>
+</html>
